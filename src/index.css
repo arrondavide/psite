@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Gaming-inspired gradient palette */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+  --gradient-accent: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  
+  /* Neon effects */
+  --neon-primary: 0 0 20px rgba(99, 102, 241, 0.5);
+  --neon-secondary: 0 0 20px rgba(34, 211, 238, 0.5);
+  
+  /* Animation settings */
+  --bounce-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Modern card styling */
+.game-card {
+  @apply relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 p-1;
+  transition: transform 0.3s var(--bounce-timing), box-shadow 0.3s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--neon-primary);
+}
+
+.game-card::before {
+  content: '';
+  @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity;
+  background: var(--gradient-primary);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+.game-card:hover::before {
+  @apply opacity-100;
+}
+
+/* Modern button styling */
+.gaming-button {
+  @apply relative overflow-hidden rounded-xl px-6 py-3 font-medium text-white transition-all;
+  background: var(--gradient-primary);
+}
+
+.gaming-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neon-primary);
+}
+
+.gaming-button::after {
+  content: '';
+  @apply absolute inset-0 opacity-0 transition-opacity;
+  background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
+}
+
+.gaming-button:hover::after {
+  @apply opacity-100;
+}
+
+/* Header enhancements */
+.header-container {
+  @apply relative backdrop-blur-md;
+  background: rgba(17, 24, 39, 0.8);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.logo-text {
+  @apply bg-clip-text text-transparent;
+  background: var(--gradient-primary);
+  animation: pulse 3s infinite;
+}
+
+/* Navigation styling */
+.nav-link {
+  @apply relative rounded-lg px-4 py-2 text-gray-300 transition-all;
+}
+
+.nav-link::before {
+  content: '';
+  @apply absolute inset-0 rounded-lg opacity-0 transition-opacity;
+  background: var(--gradient-primary);
+  opacity: 0;
+}
+
+.nav-link:hover::before {
+  @apply opacity-10;
+}
+
+/* Search bar enhancement */
+.search-container {
+  @apply relative rounded-2xl bg-gray-800 p-1;
+}
+
+.search-input {
+  @apply w-full rounded-xl bg-gray-900 px-4 py-2 pl-10 text-gray-300 outline-none transition-shadow;
+}
+
+.search-input:focus {
+  box-shadow: var(--neon-secondary);
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .game-grid {
+    @apply grid-cols-1 gap-4 px-4;
+  }
+  
+  .nav-container {
+    @apply flex-col space-y-2;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .game-grid {
+    @apply grid-cols-2 gap-6 px-6;
+  }
+}
+
+@media (min-width: 1025px) {
+  .game-grid {
+    @apply grid-cols-3 gap-8 px-8;
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Loading states */
+.skeleton {
+  @apply animate-pulse rounded-lg bg-gray-800;
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .game-card:hover {
+    transform: none;
+  }
+  
+  .gaming-button:hover {
+    transform: none;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 5s linear infinite;
+}

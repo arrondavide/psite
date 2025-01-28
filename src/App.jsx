@@ -250,7 +250,7 @@ export default function App() {
                 <Route path="/shop" element={<Shop walletAddress={walletAddress} />} />
                 <Route path="/upload" element={<UploadPage walletAddress={walletAddress} />} />
                 <Route
-                  path="/"
+                  path="/home"
                   element={
                     <div className="h-full flex flex-col">
                       <SearchBar />

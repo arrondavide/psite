@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Outlet, useOutletContext } from 'react-router-dom';
 import { createBrowserRouter, RouterProvider, Outlet, Link } from "react-router-dom";
 import { Menu, X, Search, ExternalLink } from "lucide-react";
 import WalletConnect from "./components/WalletConnect";
@@ -10,7 +11,10 @@ import Logo from "./assets/logo.png";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 // Upload Page Component
-function UploadPage({ walletAddress }) {
+// Upload Page Component
+function UploadPage() {
+  const { walletAddress } = useOutletContext(); // Access walletAddress from context
+
   if (!walletAddress) {
     return (
       <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow">
@@ -176,7 +180,7 @@ function TrendingGames() {
   );
 }
 
-// Root Layout Component
+// RootLayout Component
 function RootLayout() {
   const [walletAddress, setWalletAddress] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -224,7 +228,7 @@ function RootLayout() {
 
       <main className="flex-1 w-full">
         <div className="max-w-7xl mx-auto py-6 px-4 h-full">
-          <Outlet /> {/* This renders the matched child route */}
+          <Outlet context={{ walletAddress }} /> {/* Pass walletAddress to child routes */}
         </div>
       </main>
     </div>
@@ -262,7 +266,7 @@ const router = createBrowserRouter(
         },
         {
           path: "/upload",
-          element: <UploadPage walletAddress={""} />, // Pass walletAddress dynamically
+          element: <UploadPage />, // No need to pass walletAddress here
         },
       ],
     },

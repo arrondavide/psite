@@ -10,12 +10,14 @@ export default function WalletConnect({ onConnect }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Check if the user is on a mobile device
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     );
   };
 
+  // Initialize MetaMask SDK and check for existing connection
   useEffect(() => {
     const init = async () => {
       const MMSDK = new MetaMaskSDK({
@@ -32,6 +34,7 @@ export default function WalletConnect({ onConnect }) {
         setIsMetaMaskInstalled(true);
 
         try {
+          // Check local storage for a previously connected wallet
           const storedAddress = localStorage.getItem('walletAddress');
           if (storedAddress) {
             const provider = new ethers.BrowserProvider(ethereum);
@@ -41,7 +44,7 @@ export default function WalletConnect({ onConnect }) {
 
             if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
               setAccount(accounts[0]);
-              onConnect(accounts[0]);
+              onConnect(accounts[0]); // Notify parent component of the connection
             }
           }
         } catch (error) {
@@ -56,26 +59,27 @@ export default function WalletConnect({ onConnect }) {
     init();
   }, []);
 
+  // Handle account changes, disconnects, and chain changes
   useEffect(() => {
     if (!isInitialized || !window.ethereum) return;
 
     const handleAccountsChanged = async (accounts) => {
       if (accounts.length === 0) {
-        handleLogout();
+        handleLogout(); // Disconnect if no accounts are available
       } else {
         const newAccount = accounts[0];
         setAccount(newAccount);
-        onConnect(newAccount);
-        localStorage.setItem('walletAddress', newAccount);
+        onConnect(newAccount); // Notify parent component of the connection
+        localStorage.setItem('walletAddress', newAccount); // Store the new account in local storage
       }
     };
 
     const handleDisconnect = () => {
-      handleLogout();
+      handleLogout(); // Handle wallet disconnection
     };
 
     const handleChainChanged = () => {
-      window.location.reload();
+      window.location.reload(); // Reload the page on chain change
     };
 
     window.ethereum.on('accountsChanged', handleAccountsChanged);
@@ -91,6 +95,7 @@ export default function WalletConnect({ onConnect }) {
     };
   }, [isInitialized]);
 
+  // Connect to MetaMask
   const connectWallet = async () => {
     if (!window.ethereum) return;
 
@@ -101,20 +106,21 @@ export default function WalletConnect({ onConnect }) {
 
       const address = accounts[0];
       setAccount(address);
-      onConnect(address);
-      localStorage.setItem('walletAddress', address);
-      setIsOpen(false);
+      onConnect(address); // Notify parent component of the connection
+      localStorage.setItem('walletAddress', address); // Store the address in local storage
+      setIsOpen(false); // Close the dialog
     } catch (err) {
       console.error('Connection error:', err);
       handleLogout();
     }
   };
 
+  // Handle wallet logout
   const handleLogout = () => {
     setAccount('');
-    onConnect('');
-    localStorage.removeItem('walletAddress');
-    setIsOpen(false);
+    onConnect(''); // Notify parent component of the disconnection
+    localStorage.removeItem('walletAddress'); // Remove the address from local storage
+    setIsOpen(false); // Close the dialog
   };
 
   return (

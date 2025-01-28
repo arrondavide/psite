@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { User, LogOut } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
+import MetaMaskSDK from '@metamask/sdk';
 
 export default function WalletConnect({ onConnect }) {
   const [account, setAccount] = useState('');
@@ -15,54 +16,37 @@ export default function WalletConnect({ onConnect }) {
     );
   };
 
-  const getMetaMaskDeepLink = () => {
-    const dappUrl = encodeURIComponent(window.location.href);
-    return `https://metamask.app.link/dapp/https%3A%2F%2Farrondavide.github.io%2Fpsite%2F`;
-  };
-
-  const handleMobileConnect = () => {
-    if (isMobile()) {
-      const deepLink = getMetaMaskDeepLink();
-      console.log('Generated Deep Link:', deepLink); // Debugging
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isAndroid || isiOS) {
-        window.location.href = deepLink;
-      } else {
-        alert('Please open this page in a mobile browser with MetaMask installed.');
-      }
-    } else {
-      connectWallet();
-    }
-  };
-
   useEffect(() => {
     const init = async () => {
-      const { ethereum } = window;
+      const MMSDK = new MetaMaskSDK({
+        injectProvider: true,
+        dappMetadata: {
+          name: "Your DApp Name",
+          url: window.location.href,
+        },
+      });
 
-      if (!isMobile()) {
-        const isMetaMask = !!ethereum && ethereum.isMetaMask;
-        setIsMetaMaskInstalled(isMetaMask);
+      const ethereum = MMSDK.getProvider();
 
-        if (isMetaMask) {
-          try {
-            const storedAddress = localStorage.getItem('walletAddress');
-            if (storedAddress) {
-              const provider = new ethers.BrowserProvider(ethereum);
-              const accounts = await ethereum.request({
-                method: 'eth_accounts',
-              });
+      if (ethereum) {
+        setIsMetaMaskInstalled(true);
 
-              if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
-                setAccount(accounts[0]);
-                onConnect(accounts[0]);
-              }
+        try {
+          const storedAddress = localStorage.getItem('walletAddress');
+          if (storedAddress) {
+            const provider = new ethers.BrowserProvider(ethereum);
+            const accounts = await ethereum.request({
+              method: 'eth_accounts',
+            });
+
+            if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
+              setAccount(accounts[0]);
+              onConnect(accounts[0]);
             }
-          } catch (error) {
-            console.error('Error during initialization:', error);
-            handleLogout();
           }
+        } catch (error) {
+          console.error('Error during initialization:', error);
+          handleLogout();
         }
       }
 
@@ -73,7 +57,7 @@ export default function WalletConnect({ onConnect }) {
   }, []);
 
   useEffect(() => {
-    if (!isInitialized || !window.ethereum || isMobile()) return;
+    if (!isInitialized || !window.ethereum) return;
 
     const handleAccountsChanged = async (accounts) => {
       if (accounts.length === 0) {
@@ -183,7 +167,7 @@ export default function WalletConnect({ onConnect }) {
                   Connect your MetaMask wallet to access your account.
                 </p>
                 <button
-                  onClick={handleMobileConnect}
+                  onClick={connectWallet}
                   className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors w-full flex items-center justify-center space-x-2"
                 >
                   <span>Connect MetaMask</span>

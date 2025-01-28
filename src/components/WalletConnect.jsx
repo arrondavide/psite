@@ -16,10 +16,30 @@ export default function WalletConnect({ onConnect }) {
     );
   };
 
-  // Generate a MetaMask deep link URL with a callback
+  // Generate a MetaMask deep link URL
   const getMetaMaskDeepLink = () => {
     const dappUrl = encodeURIComponent(window.location.href); // Use the current URL as the callback
     return `https://metamask.app.link/dapp/${dappUrl}`;
+  };
+
+  // Redirect to MetaMask or app store if MetaMask is not installed
+  const handleMobileConnect = () => {
+    if (isMobile()) {
+      const deepLink = getMetaMaskDeepLink();
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      // Check if MetaMask is installed
+      if (isAndroid || isiOS) {
+        window.location.href = deepLink;
+      } else {
+        // Fallback for unsupported devices
+        alert('Please open this page in a mobile browser with MetaMask installed.');
+      }
+    } else {
+      // Connect using standard MetaMask provider
+      connectWallet();
+    }
   };
 
   // Initialize MetaMask detection and connection
@@ -119,16 +139,6 @@ export default function WalletConnect({ onConnect }) {
     onConnect('');
     localStorage.removeItem('walletAddress');
     setIsOpen(false);
-  };
-
-  const handleMobileConnect = () => {
-    if (isMobile()) {
-      // Redirect to MetaMask app using deep link
-      window.location.href = getMetaMaskDeepLink();
-    } else {
-      // Connect using standard MetaMask provider
-      connectWallet();
-    }
   };
 
   return (

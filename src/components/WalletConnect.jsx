@@ -17,7 +17,7 @@ export default function WalletConnect({ onConnect }) {
 
   const getMetaMaskDeepLink = () => {
     const dappUrl = encodeURIComponent(window.location.href);
-    return dappUrl;
+    return `https://metamask.app.link/dapp/https%3A%2F%2Farrondavide.github.io%2Fpsite%2F`;
   };
 
   const handleMobileConnect = () => {

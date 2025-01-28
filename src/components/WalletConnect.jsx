@@ -18,7 +18,9 @@ export default function WalletConnect({ onConnect }) {
 
   // Generate a MetaMask deep link URL
   const getMetaMaskDeepLink = () => {
-    return `https://metamask.app.link/dapp/${window.location.host}`;
+    // Use the full URL of your GitHub Pages site
+    const dappUrl = encodeURIComponent('https://arrondavide.github.io/psite/');
+    return `https://metamask.app.link/dapp/${dappUrl}`;
   };
 
   // Initialize MetaMask detection and connection

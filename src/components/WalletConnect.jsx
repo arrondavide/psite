@@ -17,7 +17,7 @@ export default function WalletConnect({ onConnect }) {
 
   const getMetaMaskDeepLink = () => {
     const dappUrl = encodeURIComponent(window.location.href);
-    return `https://metamask.app.link/dapp/${dappUrl}`;
+    return dappUrl;
   };
 
   const handleMobileConnect = () => {

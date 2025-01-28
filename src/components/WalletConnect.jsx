@@ -9,24 +9,32 @@ export default function WalletConnect({ onConnect }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Check if the user is on a mobile device
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  };
+
+  // Generate a MetaMask deep link URL
+  const getMetaMaskDeepLink = () => {
+    return `https://metamask.app.link/dapp/${window.location.host}`;
+  };
+
   // Initialize MetaMask detection and connection
   useEffect(() => {
     const init = async () => {
-      // Check if MetaMask is installed
       const { ethereum } = window;
       const isMetaMask = !!ethereum && ethereum.isMetaMask;
       setIsMetaMaskInstalled(isMetaMask);
 
       if (isMetaMask) {
         try {
-          // Get the stored address
           const storedAddress = localStorage.getItem('walletAddress');
-          
-          // If there's a stored address, verify it's still connected
           if (storedAddress) {
             const provider = new ethers.BrowserProvider(ethereum);
             const accounts = await ethereum.request({
-              method: 'eth_accounts'
+              method: 'eth_accounts',
             });
 
             if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
@@ -39,7 +47,7 @@ export default function WalletConnect({ onConnect }) {
           handleLogout();
         }
       }
-      
+
       setIsInitialized(true);
     };
 
@@ -66,7 +74,6 @@ export default function WalletConnect({ onConnect }) {
     };
 
     const handleChainChanged = () => {
-      // Reload the page on chain change as recommended by MetaMask
       window.location.reload();
     };
 
@@ -88,18 +95,16 @@ export default function WalletConnect({ onConnect }) {
 
     try {
       const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
+        method: 'eth_requestAccounts',
       });
-      
+
       const address = accounts[0];
       setAccount(address);
       onConnect(address);
       localStorage.setItem('walletAddress', address);
       setIsOpen(false);
-
     } catch (err) {
       console.error('Connection error:', err);
-      // Clear any stale data
       handleLogout();
     }
   };
@@ -109,6 +114,14 @@ export default function WalletConnect({ onConnect }) {
     onConnect('');
     localStorage.removeItem('walletAddress');
     setIsOpen(false);
+  };
+
+  const handleMobileConnect = () => {
+    if (isMobile()) {
+      window.location.href = getMetaMaskDeepLink();
+    } else {
+      connectWallet();
+    }
   };
 
   return (
@@ -134,7 +147,7 @@ export default function WalletConnect({ onConnect }) {
           <Dialog.Title className="text-xl font-bold mb-4">
             {account ? 'Wallet Connected' : 'Connect Wallet'}
           </Dialog.Title>
-          
+
           <div className="space-y-6">
             {!isMetaMaskInstalled ? (
               <div className="text-center">
@@ -161,23 +174,16 @@ export default function WalletConnect({ onConnect }) {
                   Connect your MetaMask wallet to access your account.
                 </p>
                 <button
-                  onClick={connectWallet}
+                  onClick={handleMobileConnect}
                   className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors w-full flex items-center justify-center space-x-2"
                 >
-                  {/* <img 
-                    src="/api/placeholder/24/24"
-                    alt="MetaMask"
-                    className="w-6 h-6"
-                  /> */}
                   <span>Connect MetaMask</span>
                 </button>
               </div>
             ) : (
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Connected Wallet</h3>
-                <p className="text-gray-600 break-all mb-6">
-                  {account}
-                </p>
+                <p className="text-gray-600 break-all mb-6">{account}</p>
                 <button
                   onClick={handleLogout}
                   className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors w-full flex items-center justify-center space-x-2"

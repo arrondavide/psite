@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useOutletContext } from 'react-router-dom';
-import { createBrowserRouter, RouterProvider, Outlet, Link } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet, Link, useOutletContext } from "react-router-dom";
 import { Menu, X, Search, ExternalLink } from "lucide-react";
 import WalletConnect from "./components/WalletConnect";
 import GameUpload from "./components/GameUpload";
@@ -10,7 +9,6 @@ import Shop from "./components/Shop";
 import Logo from "./assets/logo.png";
 import LoadingSpinner from "./components/LoadingSpinner";
 
-// Upload Page Component
 // Upload Page Component
 function UploadPage() {
   const { walletAddress } = useOutletContext(); // Access walletAddress from context
@@ -180,7 +178,7 @@ function TrendingGames() {
   );
 }
 
-// RootLayout Component
+// Root Layout Component
 function RootLayout() {
   const [walletAddress, setWalletAddress] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

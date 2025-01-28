@@ -25,26 +25,30 @@ export default function WalletConnect({ onConnect }) {
   useEffect(() => {
     const init = async () => {
       const { ethereum } = window;
-      const isMetaMask = !!ethereum && ethereum.isMetaMask;
-      setIsMetaMaskInstalled(isMetaMask);
 
-      if (isMetaMask) {
-        try {
-          const storedAddress = localStorage.getItem('walletAddress');
-          if (storedAddress) {
-            const provider = new ethers.BrowserProvider(ethereum);
-            const accounts = await ethereum.request({
-              method: 'eth_accounts',
-            });
+      // Skip MetaMask check on mobile
+      if (!isMobile()) {
+        const isMetaMask = !!ethereum && ethereum.isMetaMask;
+        setIsMetaMaskInstalled(isMetaMask);
 
-            if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
-              setAccount(accounts[0]);
-              onConnect(accounts[0]);
+        if (isMetaMask) {
+          try {
+            const storedAddress = localStorage.getItem('walletAddress');
+            if (storedAddress) {
+              const provider = new ethers.BrowserProvider(ethereum);
+              const accounts = await ethereum.request({
+                method: 'eth_accounts',
+              });
+
+              if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
+                setAccount(accounts[0]);
+                onConnect(accounts[0]);
+              }
             }
+          } catch (error) {
+            console.error('Error during initialization:', error);
+            handleLogout();
           }
-        } catch (error) {
-          console.error('Error during initialization:', error);
-          handleLogout();
         }
       }
 
@@ -56,7 +60,7 @@ export default function WalletConnect({ onConnect }) {
 
   // Set up event listeners after initialization
   useEffect(() => {
-    if (!isInitialized || !window.ethereum) return;
+    if (!isInitialized || !window.ethereum || isMobile()) return;
 
     const handleAccountsChanged = async (accounts) => {
       if (accounts.length === 0) {
@@ -118,8 +122,10 @@ export default function WalletConnect({ onConnect }) {
 
   const handleMobileConnect = () => {
     if (isMobile()) {
+      // Redirect to MetaMask app using deep link
       window.location.href = getMetaMaskDeepLink();
     } else {
+      // Connect using standard MetaMask provider
       connectWallet();
     }
   };
@@ -149,7 +155,7 @@ export default function WalletConnect({ onConnect }) {
           </Dialog.Title>
 
           <div className="space-y-6">
-            {!isMetaMaskInstalled ? (
+            {!isMetaMaskInstalled && !isMobile() ? (
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-4">MetaMask Required</h3>
                 <p className="text-gray-600 mb-6">

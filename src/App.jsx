@@ -208,7 +208,7 @@ export default function App() {
   }, [])
 
   return (
-    <Router>
+    <Router basename="/psite">
       <div className="min-h-screen bg-gray-900">
         <header className="header-container">
           <div className="max-w-7xl mx-auto py-4 px-4 flex items-center justify-between">

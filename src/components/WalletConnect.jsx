@@ -9,45 +9,38 @@ export default function WalletConnect({ onConnect }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Check if the user is on a mobile device
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     );
   };
 
-  // Generate a MetaMask deep link URL
   const getMetaMaskDeepLink = () => {
-    const dappUrl = encodeURIComponent(window.location.href); // Use the current URL as the callback
+    const dappUrl = encodeURIComponent(window.location.href);
     return `https://metamask.app.link/dapp/${dappUrl}`;
   };
 
-  // Redirect to MetaMask or app store if MetaMask is not installed
   const handleMobileConnect = () => {
     if (isMobile()) {
       const deepLink = getMetaMaskDeepLink();
+      console.log('Generated Deep Link:', deepLink); // Debugging
       const isAndroid = /Android/i.test(navigator.userAgent);
       const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      // Check if MetaMask is installed
       if (isAndroid || isiOS) {
         window.location.href = deepLink;
       } else {
-        // Fallback for unsupported devices
         alert('Please open this page in a mobile browser with MetaMask installed.');
       }
     } else {
-      // Connect using standard MetaMask provider
       connectWallet();
     }
   };
 
-  // Initialize MetaMask detection and connection
   useEffect(() => {
     const init = async () => {
       const { ethereum } = window;
 
-      // Skip MetaMask check on mobile
       if (!isMobile()) {
         const isMetaMask = !!ethereum && ethereum.isMetaMask;
         setIsMetaMaskInstalled(isMetaMask);
@@ -79,7 +72,6 @@ export default function WalletConnect({ onConnect }) {
     init();
   }, []);
 
-  // Set up event listeners after initialization
   useEffect(() => {
     if (!isInitialized || !window.ethereum || isMobile()) return;
 

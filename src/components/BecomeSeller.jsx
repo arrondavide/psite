@@ -29,7 +29,7 @@ function BecomeSeller({ walletAddress }) {
       ]);
 
     if (error) {
-      console.error('Error uploading product:', error);
+      alert('Error uploading product:', error);
     } else {
       alert('Product uploaded successfully!');
       // Reset form

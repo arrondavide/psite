@@ -188,7 +188,17 @@ function TrendingGames() {
 
 // Root Layout Component
 function RootLayout() {
-  const [walletAddress, setWalletAddress] = useState("");
+  const [walletAddress, setWalletAddress] = useState(() => {
+    // Initialize wallet address from localStorage on component mount
+    const storedWalletData = localStorage.getItem('walletData');
+    if (storedWalletData) {
+      const { address, timestamp } = JSON.parse(storedWalletData);
+      // Check if the stored connection is less than 24 hours old
+      const isValid = Date.now() - timestamp < 24 * 60 * 60 * 1000;
+      return isValid ? address : "";
+    }
+    return "";
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -200,6 +210,78 @@ function RootLayout() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Handle wallet connection
+  const handleWalletConnect = (address) => {
+    setWalletAddress(address);
+    
+    if (address) {
+      // Store wallet data with timestamp when connecting
+      localStorage.setItem('walletData', JSON.stringify({
+        address,
+        timestamp: Date.now()
+      }));
+    } else {
+      // Clear stored wallet data when disconnecting
+      localStorage.removeItem('walletData');
+    }
+  };
+
+  // Check wallet connection status on page load
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({
+            method: 'eth_accounts'
+          });
+          
+          const storedWalletData = localStorage.getItem('walletData');
+          if (storedWalletData) {
+            const { address, timestamp } = JSON.parse(storedWalletData);
+            const isValid = Date.now() - timestamp < 24 * 60 * 60 * 1000;
+            
+            if (isValid && accounts[0] && accounts[0].toLowerCase() === address.toLowerCase()) {
+              // Wallet is still connected and valid
+              setWalletAddress(accounts[0]);
+            } else {
+              // Clear invalid wallet data
+              localStorage.removeItem('walletData');
+              setWalletAddress('');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking wallet connection:', error);
+          localStorage.removeItem('walletData');
+          setWalletAddress('');
+        }
+      }
+    };
+
+    checkWalletConnection();
+  }, []);
+
+  // Listen for account changes
+  useEffect(() => {
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts) => {
+        if (accounts.length === 0) {
+          // User disconnected wallet
+          setWalletAddress('');
+          localStorage.removeItem('walletData');
+        } else if (accounts[0] !== walletAddress) {
+          // User switched accounts
+          handleWalletConnect(accounts[0]);
+        }
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      
+      return () => {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      };
+    }
+  }, [walletAddress]);
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -220,7 +302,7 @@ function RootLayout() {
               <Navigation walletAddress={walletAddress} />
             )}
           </div>
-          <WalletConnect onConnect={setWalletAddress} />
+          <WalletConnect onConnect={handleWalletConnect} />
         </div>
       </header>
 

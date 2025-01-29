@@ -22,18 +22,23 @@ export default function WalletConnect({ onConnect }) {
   useEffect(() => {
     const init = async () => {
       try {
+        // First check if ethereum object exists in window
+        if (typeof window.ethereum !== 'undefined') {
+          setIsMetaMaskInstalled(true);
+          await checkAndRestoreConnection(window.ethereum);
+          setIsInitialized(true);
+          return;
+        }
+
         const MMSDK = new MetaMaskSDK({
           injectProvider: true,
           dappMetadata: {
             name: "Your DApp Name",
             url: window.location.href,
           },
-          // Enable deep linking for mobile
           checkInstallationImmediately: true,
           enableDeeplinks: true,
-          // Recommended timeout
           timer: 1000,
-          // Optional: Add your preferred network
           defaultNetwork: "ethereum",
         });
 
@@ -54,16 +59,17 @@ export default function WalletConnect({ onConnect }) {
     init();
   }, []);
 
+
   // Check and restore previous connection
   const checkAndRestoreConnection = async (ethereum) => {
     try {
       const storedData = localStorage.getItem('walletData');
       if (storedData) {
         const { address, timestamp } = JSON.parse(storedData);
-        
+
         // Check if the stored connection is less than 24 hours old
         const isValid = Date.now() - timestamp < 24 * 60 * 60 * 1000;
-        
+
         if (isValid) {
           const accounts = await ethereum.request({
             method: 'eth_accounts',
@@ -99,7 +105,7 @@ export default function WalletConnect({ onConnect }) {
         const newAccount = accounts[0];
         setAccount(newAccount);
         onConnect(newAccount);
-        
+
         // Store connection data with timestamp
         localStorage.setItem('walletData', JSON.stringify({
           address: newAccount,
@@ -177,13 +183,13 @@ export default function WalletConnect({ onConnect }) {
       const address = accounts[0];
       setAccount(address);
       onConnect(address);
-      
+
       // Store connection data with timestamp
       localStorage.setItem('walletData', JSON.stringify({
         address,
         timestamp: Date.now()
       }));
-      
+
       setIsOpen(false);
     } catch (err) {
       console.error('Connection error:', err);

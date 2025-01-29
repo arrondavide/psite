@@ -1,116 +1,221 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { AlertCircle } from 'lucide-react';
 
 function BecomeSeller({ walletAddress }) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [imageUrls, setImageUrls] = useState([]);
-  const [telegramLink, setTelegramLink] = useState('');
-  const [whatsappLink, setWhatsappLink] = useState('');
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    imageUrls: [],
+    telegramLink: '',
+    whatsappLink: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isVerifiedSeller, setIsVerifiedSeller] = useState(false);
+
+  // Check if user is already a verified seller
+  useEffect(() => {
+    const checkSellerStatus = async () => {
+      if (!walletAddress) return;
+
+      const { data, error } = await supabase
+        .from('shop')
+        .select('verified')
+        .eq('seller_wallet_address', walletAddress)
+        .single();
+
+      if (data) {
+        setIsVerifiedSeller(data.verified);
+      }
+    };
+
+    checkSellerStatus();
+  }, [walletAddress]);
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'imageUrls') {
+      // Split by comma and trim whitespace for each URL
+      const urls = value.split(',').map(url => url.trim()).filter(url => url);
+      setFormData(prev => ({ ...prev, [name]: urls }));
+    } else if (name === 'price') {
+      // Ensure price is a valid number
+      const numberValue = value.replace(/[^0-9.]/g, '');
+      setFormData(prev => ({ ...prev, [name]: numberValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // Validate form data
+  const validateForm = () => {
+    if (!formData.name.trim()) return 'Product name is required';
+    if (!formData.description.trim()) return 'Description is required';
+    if (!formData.price || parseFloat(formData.price) <= 0) return 'Valid price is required';
+    if (formData.imageUrls.length === 0) return 'At least one image URL is required';
+    if (formData.imageUrls.some(url => !url.startsWith('http'))) return 'Invalid image URL format';
+    if (!formData.telegramLink && !formData.whatsappLink) return 'At least one contact method is required';
+    return null;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError(null);
 
-    const { data, error } = await supabase
-      .from('shop')
-      .insert([
-        {
-          name,
-          description,
-          price: parseFloat(price),
-          image_urls: imageUrls,
-          telegram_link: telegramLink,
-          whatsapp_link: whatsappLink,
-          seller_wallet_address: walletAddress,
-        },
-      ]);
-
-    if (error) {
-      alert('Error uploading product:', error);
-    } else {
-      alert('Product uploaded successfully!');
-      // Reset form
-      setName('');
-      setDescription('');
-      setPrice('');
-      setImageUrls([]);
-      setTelegramLink('');
-      setWhatsappLink('');
+    // Check wallet connection
+    if (!walletAddress) {
+      setError('Please connect your wallet first');
+      return;
     }
 
-    setIsLoading(false);
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { data, error: uploadError } = await supabase
+        .from('shop')
+        .insert([
+          {
+            name: formData.name,
+            description: formData.description,
+            price: parseFloat(formData.price),
+            image_urls: formData.imageUrls,
+            telegram_link: formData.telegramLink,
+            whatsapp_link: formData.whatsappLink,
+            seller_wallet_address: walletAddress,
+            verified: false // New sellers start unverified
+          }
+        ]);
+
+      if (uploadError) throw uploadError;
+
+      alert('Product uploaded successfully! Pending verification.');
+      navigate('/shop'); // Redirect to shop page after successful upload
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (!walletAddress) {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
+        <div className="flex items-center gap-2 text-red-500 mb-4">
+          <AlertCircle size={20} />
+          <p>Please connect your wallet to become a seller</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isVerifiedSeller) {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
+        <div className="flex items-center gap-2 text-green-500 mb-4">
+          <h2 className="text-xl font-bold text-white">You are a verified seller!</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
       <h2 className="text-xl font-bold text-white mb-4">Become a Seller</h2>
+      {error && (
+        <div className="bg-red-500/20 border border-red-500 rounded p-3 mb-4 text-red-500">
+          {error}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-white">Product Name</label>
+          <label className="block text-white mb-1">Product Name</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 rounded bg-gray-700 text-white"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-white">Description</label>
+          <label className="block text-white mb-1">Description</label>
           <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 rounded bg-gray-700 text-white"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            rows="4"
             required
           />
         </div>
+
         <div>
-          <label className="block text-white">Price (USD)</label>
+          <label className="block text-white mb-1">Price (USD)</label>
           <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="w-full p-2 rounded bg-gray-700 text-white"
+            type="text"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             required
           />
         </div>
+
         <div>
-          <label className="block text-white">Image URLs (comma separated)</label>
+          <label className="block text-white mb-1">Image URLs (comma separated)</label>
           <input
             type="text"
-            value={imageUrls.join(',')}
-            onChange={(e) => setImageUrls(e.target.value.split(','))}
-            className="w-full p-2 rounded bg-gray-700 text-white"
+            name="imageUrls"
+            value={formData.imageUrls.join(',')}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             required
           />
+          <p className="text-gray-400 text-sm mt-1">Enter full URLs starting with http:// or https://</p>
         </div>
+
         <div>
-          <label className="block text-white">Telegram Link</label>
+          <label className="block text-white mb-1">Telegram Link</label>
           <input
             type="text"
-            value={telegramLink}
-            onChange={(e) => setTelegramLink(e.target.value)}
-            className="w-full p-2 rounded bg-gray-700 text-white"
+            name="telegramLink"
+            value={formData.telegramLink}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </div>
+
         <div>
-          <label className="block text-white">WhatsApp Link</label>
+          <label className="block text-white mb-1">WhatsApp Link</label>
           <input
             type="text"
-            value={whatsappLink}
-            onChange={(e) => setWhatsappLink(e.target.value)}
-            className="w-full p-2 rounded bg-gray-700 text-white"
+            name="whatsappLink"
+            value={formData.whatsappLink}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </div>
+
         <button
           type="submit"
-          className="gaming-button w-full"
+          className={`gaming-button w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={isLoading}
         >
-          {isLoading ? 'Uploading...' : 'Upload Product'}
+          {isLoading ? 'Uploading...' : 'Submit for Verification'}
         </button>
       </form>
     </div>

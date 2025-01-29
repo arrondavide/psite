@@ -7,12 +7,24 @@ function Shop({ walletAddress }) {
   const [shopItems, setShopItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [imageIndices, setImageIndices] = useState({});
-  const [categories, setCategories] = useState([]);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+
+  // Predefined categories
+  const categories = [
+    'Pokémon Cards and Trading Cards',
+    'NFTs and Digital Collectibles',
+    'Rare Collectibles',
+    'Gaming and In-Game Assets',
+    'Art and Creative Works',
+    'Luxury and High-End Items',
+    'Miscellaneous Rare Items',
+    'User-Generated Content (UGC)',
+    'Bundles and Collections'
+  ];
 
   useEffect(() => {
     const fetchShopItems = async () => {
@@ -33,10 +45,6 @@ function Shop({ walletAddress }) {
           return acc;
         }, {});
         setImageIndices(initialIndices);
-
-        // Extract unique categories
-        const uniqueCategories = [...new Set(data.map(item => item.category))].filter(Boolean);
-        setCategories(uniqueCategories);
       }
     };
 
@@ -110,16 +118,19 @@ function Shop({ walletAddress }) {
           </div>
           
           {/* Category Filter */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Categories</option>
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="appearance-none bg-gray-700 text-white px-4 py-2 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[200px]"
+            >
+              <option value="">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 transform rotate-90 text-gray-400 pointer-events-none" size={20} />
+          </div>
           
           {/* Price Range Filters */}
           <div className="flex gap-2">
@@ -146,6 +157,35 @@ function Shop({ walletAddress }) {
           >
             Reset Filters
           </button>
+        </div>
+
+        {/* Category Pills - Mobile Friendly Scrollable List */}
+        <div className="overflow-x-auto pb-2">
+          <div className="flex space-x-2 min-w-max">
+            <button
+              onClick={() => setSelectedCategory('')}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                selectedCategory === ''
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              All
+            </button>
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  selectedCategory === category
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
         </div>
         
         {/* Results Count */}

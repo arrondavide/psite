@@ -1,56 +1,162 @@
-import React, { useState, useEffect } from 'react'
-import { Send, ChevronLeft, ChevronRight } from 'lucide-react'
-import { FaWhatsapp } from 'react-icons/fa'
-import { supabase } from '../supabase'
+import React, { useState, useEffect } from 'react';
+import { Send, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import { supabase } from '../supabase';
 
 function Shop({ walletAddress }) {
-  const [shopItems, setShopItems] = useState([])
-  const [imageIndices, setImageIndices] = useState({})
+  const [shopItems, setShopItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [imageIndices, setImageIndices] = useState({});
+  const [categories, setCategories] = useState([]);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
 
   useEffect(() => {
     const fetchShopItems = async () => {
       const { data, error } = await supabase
         .from('shop')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching shop items:', error)
+        console.error('Error fetching shop items:', error);
       } else {
-        setShopItems(data || [])
+        setShopItems(data || []);
+        setFilteredItems(data || []);
         
         // Initialize image indices
         const initialIndices = data.reduce((acc, item) => {
-          acc[item.id] = 0
-          return acc
-        }, {})
-        setImageIndices(initialIndices)
+          acc[item.id] = 0;
+          return acc;
+        }, {});
+        setImageIndices(initialIndices);
+
+        // Extract unique categories
+        const uniqueCategories = [...new Set(data.map(item => item.category))].filter(Boolean);
+        setCategories(uniqueCategories);
       }
+    };
+
+    fetchShopItems();
+  }, []);
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = [...shopItems];
+
+    // Search by name
+    if (searchQuery) {
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
-    fetchShopItems()
-  }, [])
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter(item => item.category === selectedCategory);
+    }
+
+    // Filter by price range
+    if (priceRange.min !== '') {
+      filtered = filtered.filter(item => item.price >= Number(priceRange.min));
+    }
+    if (priceRange.max !== '') {
+      filtered = filtered.filter(item => item.price <= Number(priceRange.max));
+    }
+
+    setFilteredItems(filtered);
+  }, [shopItems, searchQuery, selectedCategory, priceRange]);
 
   const handleNextImage = (itemId, totalImages) => {
     setImageIndices(prev => ({
       ...prev,
       [itemId]: (prev[itemId] + 1) % totalImages
-    }))
-  }
+    }));
+  };
 
   const handlePrevImage = (itemId, totalImages) => {
     setImageIndices(prev => ({
       ...prev,
       [itemId]: (prev[itemId] - 1 + totalImages) % totalImages
-    }))
-  }
+    }));
+  };
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('');
+    setPriceRange({ min: '', max: '' });
+  };
 
   return (
     <div className="shop-container">
       <h1 className="text-3xl font-bold mb-8 text-white">Shop</h1>
       
+      {/* Filters Section */}
+      <div className="mb-8 space-y-4 bg-gray-800 p-4 rounded-lg">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          {/* Category Filter */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+          
+          {/* Price Range Filters */}
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Min Price"
+              value={priceRange.min}
+              onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+              className="w-24 px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="number"
+              placeholder="Max Price"
+              value={priceRange.max}
+              onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+              className="w-24 px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          {/* Reset Filters */}
+          <button
+            onClick={resetFilters}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+          >
+            Reset Filters
+          </button>
+        </div>
+        
+        {/* Results Count */}
+        <div className="text-gray-300">
+          Showing {filteredItems.length} of {shopItems.length} items
+        </div>
+      </div>
+
+      {/* Shop Items Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {shopItems.map(item => (
+        {filteredItems.map(item => (
           <div key={item.id} className="shop-item-card bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
             <div className="relative h-64 overflow-hidden">
               {item.image_urls && item.image_urls.length > 0 && (
@@ -94,7 +200,15 @@ function Shop({ walletAddress }) {
             </div>
             
             <div className="p-4">
-              <h3 className="font-bold text-lg text-white">{item.name}</h3>
+              <div className="flex justify-between items-start">
+                <h3 className="font-bold text-lg text-white">{item.name}</h3>
+                {item.category && (
+                  <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                    {item.category}
+                  </span>
+                )}
+              </div>
+              
               <p className="text-gray-300 mt-2 line-clamp-2">{item.description}</p>
               
               <div className="mt-2 text-white">
@@ -135,7 +249,7 @@ function Shop({ walletAddress }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default Shop
+export default Shop;

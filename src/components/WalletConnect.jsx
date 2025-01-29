@@ -9,6 +9,7 @@ export default function WalletConnect({ onConnect }) {
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if the user is on a mobile device
   const isMobile = () => {
@@ -20,6 +21,22 @@ export default function WalletConnect({ onConnect }) {
   // Initialize MetaMask SDK and check for existing connection
   useEffect(() => {
     const init = async () => {
+      if (isMobile()) {
+        console.warn('MetaMask is not supported in mobile browsers. Use the MetaMask app instead.');
+        setIsMetaMaskInstalled(false);
+        setIsInitialized(true);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!window.ethereum) {
+        console.warn('MetaMask is not installed or not available.');
+        setIsMetaMaskInstalled(false);
+        setIsInitialized(true);
+        setIsLoading(false);
+        return;
+      }
+
       const MMSDK = new MetaMaskSDK({
         injectProvider: true,
         dappMetadata: {
@@ -34,8 +51,8 @@ export default function WalletConnect({ onConnect }) {
         setIsMetaMaskInstalled(true);
 
         try {
-          // Check sessionStorage for a previously connected wallet
-          const storedAddress = sessionStorage.getItem('walletAddress');
+          // Check local storage for a previously connected wallet
+          const storedAddress = localStorage.getItem('walletAddress');
           if (storedAddress) {
             const provider = new ethers.BrowserProvider(ethereum);
             const accounts = await ethereum.request({
@@ -45,6 +62,9 @@ export default function WalletConnect({ onConnect }) {
             if (accounts.length > 0 && accounts[0].toLowerCase() === storedAddress.toLowerCase()) {
               setAccount(accounts[0]);
               onConnect(accounts[0]); // Notify parent component of the connection
+            } else {
+              // If the stored address doesn't match the connected account, clear it
+              localStorage.removeItem('walletAddress');
             }
           }
         } catch (error) {
@@ -54,6 +74,7 @@ export default function WalletConnect({ onConnect }) {
       }
 
       setIsInitialized(true);
+      setIsLoading(false);
     };
 
     init();
@@ -70,7 +91,7 @@ export default function WalletConnect({ onConnect }) {
         const newAccount = accounts[0];
         setAccount(newAccount);
         onConnect(newAccount); // Notify parent component of the connection
-        sessionStorage.setItem('walletAddress', newAccount); // Store the new account in sessionStorage
+        localStorage.setItem('walletAddress', newAccount); // Store the new account in local storage
       }
     };
 
@@ -107,7 +128,7 @@ export default function WalletConnect({ onConnect }) {
       const address = accounts[0];
       setAccount(address);
       onConnect(address); // Notify parent component of the connection
-      sessionStorage.setItem('walletAddress', address); // Store the address in sessionStorage
+      localStorage.setItem('walletAddress', address); // Store the address in local storage
       setIsOpen(false); // Close the dialog
     } catch (err) {
       console.error('Connection error:', err);
@@ -119,9 +140,13 @@ export default function WalletConnect({ onConnect }) {
   const handleLogout = () => {
     setAccount('');
     onConnect(''); // Notify parent component of the disconnection
-    sessionStorage.removeItem('walletAddress'); // Remove the address from sessionStorage
+    localStorage.removeItem('walletAddress'); // Remove the address from local storage
     setIsOpen(false); // Close the dialog
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Add a loading indicator
+  }
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>

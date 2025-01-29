@@ -34,8 +34,8 @@ export default function WalletConnect({ onConnect }) {
         setIsMetaMaskInstalled(true);
 
         try {
-          // Check local storage for a previously connected wallet
-          const storedAddress = localStorage.getItem('walletAddress');
+          // Check sessionStorage for a previously connected wallet
+          const storedAddress = sessionStorage.getItem('walletAddress');
           if (storedAddress) {
             const provider = new ethers.BrowserProvider(ethereum);
             const accounts = await ethereum.request({
@@ -70,7 +70,7 @@ export default function WalletConnect({ onConnect }) {
         const newAccount = accounts[0];
         setAccount(newAccount);
         onConnect(newAccount); // Notify parent component of the connection
-        localStorage.setItem('walletAddress', newAccount); // Store the new account in local storage
+        sessionStorage.setItem('walletAddress', newAccount); // Store the new account in sessionStorage
       }
     };
 
@@ -107,7 +107,7 @@ export default function WalletConnect({ onConnect }) {
       const address = accounts[0];
       setAccount(address);
       onConnect(address); // Notify parent component of the connection
-      localStorage.setItem('walletAddress', address); // Store the address in local storage
+      sessionStorage.setItem('walletAddress', address); // Store the address in sessionStorage
       setIsOpen(false); // Close the dialog
     } catch (err) {
       console.error('Connection error:', err);
@@ -119,7 +119,7 @@ export default function WalletConnect({ onConnect }) {
   const handleLogout = () => {
     setAccount('');
     onConnect(''); // Notify parent component of the disconnection
-    localStorage.removeItem('walletAddress'); // Remove the address from local storage
+    sessionStorage.removeItem('walletAddress'); // Remove the address from sessionStorage
     setIsOpen(false); // Close the dialog
   };
 

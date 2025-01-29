@@ -6,12 +6,13 @@ import GameUpload from "./components/GameUpload";
 import GameGrid from "./components/GameGrid";
 import { supabase } from "./supabase";
 import Shop from "./components/Shop";
+import BecomeSeller from "./components/BecomeSeller"; // Import the new component
 import Logo from "./assets/logo.png";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 // Upload Page Component
 function UploadPage() {
-  const { walletAddress } = useOutletContext(); // Access walletAddress from context
+  const { walletAddress } = useOutletContext();
 
   if (!walletAddress) {
     return (
@@ -31,6 +32,7 @@ function Navigation({ walletAddress, isMobile, closeMobileMenu }) {
     { to: "/shop", label: "Shop" },
     { to: "/how-it-works", label: "How it Works" },
     ...(walletAddress ? [{ to: "/upload", label: "Upload Game" }] : []),
+    ...(walletAddress ? [{ to: "/become-seller", label: "Become a Seller" }] : []), // Add this line
     { href: "https://your-support-url.com", label: "Support", external: true },
   ];
 
@@ -226,7 +228,7 @@ function RootLayout() {
 
       <main className="flex-1 w-full">
         <div className="max-w-7xl mx-auto py-6 px-4 h-full">
-          <Outlet context={{ walletAddress }} /> {/* Pass walletAddress to child routes */}
+          <Outlet context={{ walletAddress }} />
         </div>
       </main>
     </div>
@@ -264,13 +266,17 @@ const router = createBrowserRouter(
         },
         {
           path: "/upload",
-          element: <UploadPage />, // No need to pass walletAddress here
+          element: <UploadPage />,
+        },
+        {
+          path: "/become-seller",
+          element: <BecomeSeller />,
         },
       ],
     },
   ],
   {
-    basename: "/psite", // Add basename for GitHub Pages
+    basename: "/psite",
   }
 );
 

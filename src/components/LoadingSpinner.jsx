@@ -13,13 +13,13 @@ const LoadingSpinner = () => {
           style={{ animationDuration: '3s' }}
         />
         {/* Glow Effect */}
-        <div
+        {/* <div
           className="absolute inset-0 rounded-full shadow-lg"
           style={{
             boxShadow: '0 0 30px 10px rgba(255, 255, 255, 0.6)', // Adjusted glow size
             animation: 'pulse 2s infinite',
           }}
-        ></div>
+        ></div> */}
       </div>
 
       {/* Loading Text with Animation */}

@@ -5,7 +5,7 @@ const LoadingSpinner = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-purple-900 to-indigo-800">
       {/* Animated Logo */}
-      <div className="relative w-48 h-48"> {/* Increased size */}
+      <div className="relative w-51 h-48"> {/* Increased size */}
         <img
           src={Logo}
           alt="Game Portal Logo"

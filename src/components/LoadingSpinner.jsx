@@ -5,7 +5,7 @@ const LoadingSpinner = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-purple-900 to-indigo-800">
       {/* Animated Logo */}
-      <div className="relative w-32 h-32">
+      <div className="relative w-48 h-48"> {/* Increased size */}
         <img
           src={Logo}
           alt="Game Portal Logo"
@@ -16,7 +16,7 @@ const LoadingSpinner = () => {
         <div
           className="absolute inset-0 rounded-full shadow-lg"
           style={{
-            boxShadow: '0 0 20px 5px rgba(255, 255, 255, 0.6)',
+            boxShadow: '0 0 30px 10px rgba(255, 255, 255, 0.6)', // Adjusted glow size
             animation: 'pulse 2s infinite',
           }}
         ></div>

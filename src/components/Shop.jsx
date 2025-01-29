@@ -7,6 +7,8 @@ function Shop({ walletAddress }) {
   const [shopItems, setShopItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [imageIndices, setImageIndices] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +41,6 @@ function Shop({ walletAddress }) {
         setShopItems(data || []);
         setFilteredItems(data || []);
         
-        // Initialize image indices
         const initialIndices = data.reduce((acc, item) => {
           acc[item.id] = 0;
           return acc;
@@ -55,19 +56,16 @@ function Shop({ walletAddress }) {
   useEffect(() => {
     let filtered = [...shopItems];
 
-    // Search by name
     if (searchQuery) {
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
 
-    // Filter by price range
     if (priceRange.min !== '') {
       filtered = filtered.filter(item => item.price >= Number(priceRange.min));
     }
@@ -76,7 +74,14 @@ function Shop({ walletAddress }) {
     }
 
     setFilteredItems(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [shopItems, searchQuery, selectedCategory, priceRange]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentItems = filteredItems.slice(startIndex, endIndex);
 
   const handleNextImage = (itemId, totalImages) => {
     setImageIndices(prev => ({
@@ -96,6 +101,12 @@ function Shop({ walletAddress }) {
     setSearchQuery('');
     setSelectedCategory('');
     setPriceRange({ min: '', max: '' });
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -159,7 +170,7 @@ function Shop({ walletAddress }) {
           </button>
         </div>
 
-        {/* Category Pills - Mobile Friendly Scrollable List */}
+        {/* Category Pills */}
         <div className="overflow-x-auto pb-2">
           <div className="flex space-x-2 min-w-max">
             <button
@@ -190,13 +201,14 @@ function Shop({ walletAddress }) {
         
         {/* Results Count */}
         <div className="text-gray-300">
-          Showing {filteredItems.length} of {shopItems.length} items
+          Showing {Math.min(ITEMS_PER_PAGE, filteredItems.length - startIndex)} of {filteredItems.length} items
+          {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
         </div>
       </div>
 
       {/* Shop Items Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredItems.map(item => (
+        {currentItems.map(item => (
           <div key={item.id} className="shop-item-card bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
             <div className="relative h-64 overflow-hidden">
               {item.image_urls && item.image_urls.length > 0 && (
@@ -288,6 +300,51 @@ function Shop({ walletAddress }) {
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-lg ${
+              currentPage === 1
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  currentPage === page
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-700 text-white hover:bg-gray-600'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-lg ${
+              currentPage === totalPages
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

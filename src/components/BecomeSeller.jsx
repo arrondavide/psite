@@ -11,11 +11,25 @@ function BecomeSeller({ walletAddress }) {
     price: '',
     imageUrls: [],
     telegramLink: '',
-    whatsappLink: ''
+    whatsappLink: '',
+    category: '' // Added category field
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isVerifiedSeller, setIsVerifiedSeller] = useState(false);
+
+  // Define categories
+  const categories = [
+    'Pokémon Cards and Trading Cards',
+    'NFTs and Digital Collectibles',
+    'Rare Collectibles',
+    'Gaming and In-Game Assets',
+    'Art and Creative Works',
+    'Luxury and High-End Items',
+    'Miscellaneous Rare Items',
+    'User-Generated Content (UGC)',
+    'Bundles and Collections'
+  ];
 
   // Check if user is already a verified seller
   useEffect(() => {
@@ -40,11 +54,9 @@ function BecomeSeller({ walletAddress }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'imageUrls') {
-      // Split by comma and trim whitespace for each URL
       const urls = value.split(',').map(url => url.trim()).filter(url => url);
       setFormData(prev => ({ ...prev, [name]: urls }));
     } else if (name === 'price') {
-      // Ensure price is a valid number
       const numberValue = value.replace(/[^0-9.]/g, '');
       setFormData(prev => ({ ...prev, [name]: numberValue }));
     } else {
@@ -60,6 +72,7 @@ function BecomeSeller({ walletAddress }) {
     if (formData.imageUrls.length === 0) return 'At least one image URL is required';
     if (formData.imageUrls.some(url => !url.startsWith('http'))) return 'Invalid image URL format';
     if (!formData.telegramLink && !formData.whatsappLink) return 'At least one contact method is required';
+    if (!formData.category) return 'Category selection is required';
     return null;
   };
 
@@ -67,13 +80,11 @@ function BecomeSeller({ walletAddress }) {
     e.preventDefault();
     setError(null);
 
-    // Check wallet connection
     if (!walletAddress) {
       setError('Please connect your wallet first');
       return;
     }
 
-    // Validate form
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -94,14 +105,15 @@ function BecomeSeller({ walletAddress }) {
             telegram_link: formData.telegramLink,
             whatsapp_link: formData.whatsappLink,
             seller_wallet_address: walletAddress,
-            verified: false // New sellers start unverified
+            verified: false,
+            category: formData.category // Added category
           }
         ]);
 
       if (uploadError) throw uploadError;
 
       alert('Product uploaded successfully! Pending verification.');
-      navigate('/shop'); // Redirect to shop page after successful upload
+      navigate('/shop');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -120,16 +132,6 @@ function BecomeSeller({ walletAddress }) {
     );
   }
 
-  if (isVerifiedSeller) {
-    return (
-      <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
-        <div className="flex items-center gap-2 text-green-500 mb-4">
-          <h2 className="text-xl font-bold text-white">You are a verified seller!</h2>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
       <h2 className="text-xl font-bold text-white mb-4">Become a Seller</h2>
@@ -139,6 +141,24 @@ function BecomeSeller({ walletAddress }) {
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-white mb-1">Category</label>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select a category</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label className="block text-white mb-1">Product Name</label>
           <input

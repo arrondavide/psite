@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '../supabase';
+import { useOutletContext } from 'react-router-dom';
 
-export default function GameGrid({ walletAddress }) {
+export default function GameGrid() {
+  const { walletAddress } = useOutletContext();
   const [games, setGames] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [userVotes, setUserVotes] = useState({});
@@ -138,7 +140,7 @@ export default function GameGrid({ walletAddress }) {
               <h3 className="font-bold text-xl mb-2 text-white">{game.name}</h3>
               <p className="text-gray-300">{game.description}</p>
               
-              {/* Voting Section */}
+              Voting Section
               <div className="flex items-center gap-4 mt-4 mb-4">
                 <button
                   onClick={() => handleVote(game.game_id, 'upvote')}

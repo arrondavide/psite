@@ -10,7 +10,6 @@ import BecomeSeller from "./components/BecomeSeller"; // Import the new componen
 import Logo from "./assets/logo.png";
 import LoadingSpinner from "./components/LoadingSpinner";
 
-
 function BecomeSellerPage() {
   const { walletAddress } = useOutletContext();
   return <BecomeSeller walletAddress={walletAddress} />;

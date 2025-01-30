@@ -59,7 +59,6 @@ export default function WalletConnect({ onConnect }) {
     init();
   }, []);
 
-
   // Check and restore previous connection
   const checkAndRestoreConnection = async (ethereum) => {
     try {

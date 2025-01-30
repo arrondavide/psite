@@ -140,8 +140,8 @@ export default function GameGrid() {
               <h3 className="font-bold text-xl mb-2 text-white">{game.name}</h3>
               <p className="text-gray-300">{game.description}</p>
               
-              Voting Section
-              <div className="flex items-center gap-4 mt-4 mb-4">
+              {/* Voting Section */}
+              {/* <div className="flex items-center gap-4 mt-4 mb-4">
                 <button
                   onClick={() => handleVote(game.game_id, 'upvote')}
                   disabled={!walletAddress}
@@ -167,7 +167,7 @@ export default function GameGrid() {
                   <ThumbsDown size={16} />
                   <span>{game.downvotes || 0}</span>
                 </button>
-              </div>
+              </div> */}
 
               <div className="mt-4 space-x-2">
                 <a 

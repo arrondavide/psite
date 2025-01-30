@@ -62,37 +62,47 @@ export default function GameGrid({ walletAddress }) {
       alert('Please connect your wallet to vote');
       return;
     }
-
+  
     try {
-      // Check if user has already voted
-      const existingVote = userVotes[gameId];
-      if (existingVote === voteType) {
-        alert('You have already voted on this game');
-        return;
-      }
-
-      // Start a transaction to update both votes and stats
-      const { data, error } = await supabase.rpc('handle_game_vote', {
-        p_game_id: gameId,
-        p_wallet_address: walletAddress,
-        p_vote_type: voteType,
-        p_previous_vote: existingVote || null
-      });
-
-      if (error) throw error;
-
+      // First, try to insert/update the vote
+      const { data: voteData, error: voteError } = await supabase
+        .rpc('handle_game_vote', {
+          p_game_id: gameId,
+          p_wallet_address: walletAddress,
+          p_vote_type: voteType,
+          p_previous_vote: userVotes[gameId] || null
+        });
+  
+      if (voteError) throw voteError;
+  
       // Update local state
       setUserVotes(prev => ({
         ...prev,
         [gameId]: voteType
       }));
-
-      // Refresh games to get updated vote counts
-      fetchGames();
-
+  
+      // Fetch updated game data
+      const { data: updatedGame, error: gameError } = await supabase
+        .from('game_stats')
+        .select('upvotes, downvotes')
+        .eq('game_id', gameId)
+        .single();
+  
+      if (gameError) throw gameError;
+  
+      // Update the games state with new vote counts
+      setGames(prevGames => 
+        prevGames.map(game => 
+          game.game_id === gameId 
+            ? { ...game, upvotes: updatedGame.upvotes, downvotes: updatedGame.downvotes }
+            : game
+        )
+      );
+  
+      console.log('Vote successful:', voteData);
     } catch (error) {
       console.error('Error handling vote:', error);
-      alert('Error processing vote');
+      alert('Error processing vote. Please try again.');
     }
   };
 

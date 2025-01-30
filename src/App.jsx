@@ -257,7 +257,7 @@ const router = createBrowserRouter(
               <TrendingGames />
               <section className="mt-12 flex-1">
                 <h2 className="text-2xl font-bold mb-6 text-white">All Games</h2>
-                <GameGrid />
+                <GameGrid walletAddress={walletAddress} />
               </section>
             </div>
           ),

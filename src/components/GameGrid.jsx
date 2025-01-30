@@ -1,28 +1,98 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '../supabase';
 
-export default function GameGrid() {
+export default function GameGrid({ walletAddress }) {
   const [games, setGames] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userVotes, setUserVotes] = useState({});
   const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
     fetchGames();
-  }, []);
+    if (walletAddress) {
+      fetchUserVotes();
+    }
+  }, [walletAddress]);
 
   const fetchGames = async () => {
     try {
       console.log('Fetching games...');
       const { data, error } = await supabase
-        .from('games')
-        .select('*');
+        .from('game_stats')
+        .select(`
+          *,
+          game:game_id (
+            id,
+            created_at
+          )
+        `)
+        .order('created_at', { foreignTable: 'game', ascending: false });
         
       if (error) throw error;
       console.log('Fetched games:', data);
       setGames(data);
     } catch (error) {
       console.error('Error fetching games:', error);
+    }
+  };
+
+  const fetchUserVotes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('game_votes')
+        .select('*')
+        .eq('wallet_address', walletAddress);
+        
+      if (error) throw error;
+      
+      // Convert to object for easier lookup
+      const votes = {};
+      data.forEach(vote => {
+        votes[vote.game_id] = vote.vote_type;
+      });
+      setUserVotes(votes);
+    } catch (error) {
+      console.error('Error fetching user votes:', error);
+    }
+  };
+
+  const handleVote = async (gameId, voteType) => {
+    if (!walletAddress) {
+      alert('Please connect your wallet to vote');
+      return;
+    }
+
+    try {
+      // Check if user has already voted
+      const existingVote = userVotes[gameId];
+      if (existingVote === voteType) {
+        alert('You have already voted on this game');
+        return;
+      }
+
+      // Start a transaction to update both votes and stats
+      const { data, error } = await supabase.rpc('handle_game_vote', {
+        p_game_id: gameId,
+        p_wallet_address: walletAddress,
+        p_vote_type: voteType,
+        p_previous_vote: existingVote || null
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setUserVotes(prev => ({
+        ...prev,
+        [gameId]: voteType
+      }));
+
+      // Refresh games to get updated vote counts
+      fetchGames();
+
+    } catch (error) {
+      console.error('Error handling vote:', error);
+      alert('Error processing vote');
     }
   };
 
@@ -48,15 +118,45 @@ export default function GameGrid() {
       {/* Game Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {currentGames.map(game => (
-          <div key={game.id} className="game-card bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
+          <div key={game.game_id} className="game-card bg-gray-800 rounded-2xl overflow-hidden shadow-lg">
             <img 
               src={game.thumbnail_url}
-              alt={game.title}
+              alt={game.name}
               className="w-full h-48 object-cover"
             />
             <div className="p-4">
-              <h3 className="font-bold text-xl mb-2 text-white">{game.title}</h3>
+              <h3 className="font-bold text-xl mb-2 text-white">{game.name}</h3>
               <p className="text-gray-300">{game.description}</p>
+              
+              {/* Voting Section */}
+              <div className="flex items-center gap-4 mt-4 mb-4">
+                <button
+                  onClick={() => handleVote(game.game_id, 'upvote')}
+                  disabled={!walletAddress}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                    userVotes[game.game_id] === 'upvote'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  }`}
+                >
+                  <ThumbsUp size={16} />
+                  <span>{game.upvotes || 0}</span>
+                </button>
+                
+                <button
+                  onClick={() => handleVote(game.game_id, 'downvote')}
+                  disabled={!walletAddress}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                    userVotes[game.game_id] === 'downvote'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  }`}
+                >
+                  <ThumbsDown size={16} />
+                  <span>{game.downvotes || 0}</span>
+                </button>
+              </div>
+
               <div className="mt-4 space-x-2">
                 <a 
                   href={game.game_url}
@@ -76,14 +176,14 @@ export default function GameGrid() {
                     Twitter
                   </a>
                 )}
-                {game.discord_url && (
+                {game.telegram_url && (
                   <a 
-                    href={game.discord_url}
+                    href={game.telegram_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="nav-link inline-block"
                   >
-                    Discord
+                    Telegram
                   </a>
                 )}
               </div>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '../supabase';
+import { useOutletContext } from 'react-router-dom';
 
-export default function GameGrid({ walletAddress }) {
+export default function GameGrid() {
+  const { walletAddress } = useOutletContext();
   const [games, setGames] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [userVotes, setUserVotes] = useState({});

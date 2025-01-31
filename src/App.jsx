@@ -11,12 +11,25 @@ import Logo from "./assets/logo.png";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 
+// Games Tab Component
+function GamesTab() {
+  return (
+    <div className="h-full flex flex-col">
+      <SearchBar />
+      <TrendingGames />
+      <section className="mt-12 flex-1">
+        <h2 className="text-2xl font-bold mb-6 text-white">All Games</h2>
+        <GameGrid />
+      </section>
+    </div>
+  );
+}
+
 function BecomeSellerPage() {
   const { walletAddress } = useOutletContext();
   return <BecomeSeller walletAddress={walletAddress} />;
 }
 
-// Upload Page Component
 function UploadPage() {
   const { walletAddress } = useOutletContext();
 
@@ -32,22 +45,23 @@ function UploadPage() {
   return <GameUpload walletAddress={walletAddress} />;
 }
 
-// Navigation Component
 function Navigation({ walletAddress, isMobile, closeMobileMenu }) {
   const navLinks = [
-    { to: "/shop", label: "Shop" },
+    { to: "/", label: "Shop" },
+    { to: "/games", label: "Games" },
     { to: "/how-it-works", label: "How it Works" },
     ...(walletAddress ? [{ to: "/upload", label: "Upload Game" }] : []),
-    ...(walletAddress ? [{ to: "/become-seller", label: "Become a Seller" }] : []), // Add this line
+    ...(walletAddress ? [{ to: "/become-seller", label: "Become a Seller" }] : []),
     { href: "https://your-support-url.com", label: "Support", external: true },
   ];
 
   return (
     <nav
-      className={`${isMobile
+      className={`${
+        isMobile
           ? "fixed inset-0 z-50 bg-gray-900 flex flex-col p-6 space-y-4"
           : "flex items-center space-x-6"
-        }`}
+      }`}
     >
       {isMobile && (
         <div className="flex justify-between items-center mb-6">
@@ -86,6 +100,7 @@ function Navigation({ walletAddress, isMobile, closeMobileMenu }) {
   );
 }
 
+
 // How It Works Page
 function HowItWorks() {
   return (
@@ -109,7 +124,6 @@ function HowItWorks() {
   );
 }
 
-// Search Bar Component
 function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -129,7 +143,6 @@ function SearchBar() {
   );
 }
 
-// Trending Games Component
 function TrendingGames() {
   const [trending, setTrending] = useState([]);
 
@@ -186,7 +199,6 @@ function TrendingGames() {
   );
 }
 
-// Root Layout Component
 function RootLayout() {
   const [walletAddress, setWalletAddress] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -241,7 +253,6 @@ function RootLayout() {
   );
 }
 
-// Router Configuration
 const router = createBrowserRouter(
   [
     {
@@ -251,24 +262,15 @@ const router = createBrowserRouter(
       children: [
         {
           path: "/",
-          element: (
-            <div className="h-full flex flex-col">
-              <SearchBar />
-              <TrendingGames />
-              <section className="mt-12 flex-1">
-                <h2 className="text-2xl font-bold mb-6 text-white">All Games</h2>
-                <GameGrid />
-              </section>
-            </div>
-          ),
+          element: <Shop />,
+        },
+        {
+          path: "/games",
+          element: <GamesTab />,
         },
         {
           path: "/how-it-works",
           element: <HowItWorks />,
-        },
-        {
-          path: "/shop",
-          element: <Shop />,
         },
         {
           path: "/upload",
@@ -276,7 +278,7 @@ const router = createBrowserRouter(
         },
         {
           path: "/become-seller",
-          element: <BecomeSellerPage />, // Updated to use the wrapper component
+          element: <BecomeSellerPage />,
         },
       ],
     },
@@ -286,7 +288,6 @@ const router = createBrowserRouter(
   }
 );
 
-// Main App Component
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
 

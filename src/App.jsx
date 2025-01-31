@@ -1,29 +1,13 @@
 import { useState, useEffect } from "react";
 import { createBrowserRouter, RouterProvider, Outlet, Link, useOutletContext } from "react-router-dom";
-import { Menu, X, Search, ExternalLink } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import WalletConnect from "./components/WalletConnect";
 import GameUpload from "./components/GameUpload";
-import GameGrid from "./components/GameGrid";
-import { supabase } from "./supabase";
+import Games from "./components/Games"; // Import the new Games component
 import Shop from "./components/Shop";
-import BecomeSeller from "./components/BecomeSeller"; // Import the new component
+import BecomeSeller from "./components/BecomeSeller";
 import Logo from "./assets/logo.png";
 import LoadingSpinner from "./components/LoadingSpinner";
-
-
-// Games Tab Component
-function GamesTab() {
-  return (
-    <div className="h-full flex flex-col">
-      <SearchBar />
-      <TrendingGames />
-      <section className="mt-12 flex-1">
-        <h2 className="text-2xl font-bold mb-6 text-white">All Games</h2>
-        <GameGrid />
-      </section>
-    </div>
-  );
-}
 
 function BecomeSellerPage() {
   const { walletAddress } = useOutletContext();
@@ -99,8 +83,6 @@ function Navigation({ walletAddress, isMobile, closeMobileMenu }) {
     </nav>
   );
 }
-
-
 // How It Works Page
 function HowItWorks() {
   return (
@@ -124,80 +106,7 @@ function HowItWorks() {
   );
 }
 
-function SearchBar() {
-  const [searchTerm, setSearchTerm] = useState("");
 
-  return (
-    <div className="max-w-2xl mx-auto mt-8">
-      <div className="search-container">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search games..."
-          className="search-input"
-        />
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-      </div>
-    </div>
-  );
-}
-
-function TrendingGames() {
-  const [trending, setTrending] = useState([]);
-
-  useEffect(() => {
-    const fetchTrending = async () => {
-      const { data } = await supabase
-        .from("games")
-        .select("*")
-        .eq("status", "trending")
-        .limit(3)
-        .order("created_at", { ascending: false });
-
-      if (data) setTrending(data);
-    };
-
-    fetchTrending();
-  }, []);
-
-  const handleImageError = (e) => {
-    e.target.src = "/api/placeholder/400/320";
-  };
-
-  return (
-    <section className="mt-12">
-      <h2 className="text-2xl font-bold mb-6 text-white">Trending Games</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {trending.map((game) => (
-          <div key={game.id} className="game-card">
-            <div className="relative h-48">
-              <img
-                src={game.thumbnail_url}
-                alt={game.title}
-                onError={handleImageError}
-                className="w-full h-full object-cover rounded-t-2xl"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="font-bold text-lg text-white">{game.title}</h3>
-              <p className="text-gray-300 mt-2 line-clamp-2">{game.description}</p>
-              <a
-                href={game.game_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="gaming-button mt-4 inline-flex items-center gap-2"
-              >
-                Play Game
-                <ExternalLink size={16} />
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function RootLayout() {
   const [walletAddress, setWalletAddress] = useState("");
@@ -266,7 +175,7 @@ const router = createBrowserRouter(
         },
         {
           path: "/games",
-          element: <GamesTab />,
+          element: <Games />,
         },
         {
           path: "/how-it-works",

@@ -266,11 +266,9 @@ export default function WalletConnect({ onConnect }) {
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Connected Wallet</h3>
                 <p className="text-gray-600 break-all mb-6">{account}</p>
-                {account && (
-                  <div className="mt-4 border-t pt-4">
-                    <SellerProducts walletAddress={account} />
-                  </div>
-                )}
+                <div className="mt-4 border-t pt-4">
+                  <SellerProducts walletAddress={account} />
+                </div>
                 <button
                   onClick={handleLogout}
                   className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors w-full flex items-center justify-center space-x-2"

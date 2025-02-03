@@ -46,7 +46,7 @@ const compressImage = async (file, maxWidth = 800, maxHeight = 800, quality = 0.
       };
     };
   });
-};
+}
 
 function BecomeSeller({ walletAddress }) {
   const navigate = useNavigate();
@@ -249,7 +249,18 @@ function BecomeSeller({ walletAddress }) {
     }
   };
 
-  // Render form JSX...
+
+  if (!walletAddress) {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
+        <div className="flex items-center gap-2 text-red-500 mb-4">
+          <AlertCircle size={20} />
+          <p>Please connect your wallet to become a seller</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow">
       <h2 className="text-xl font-bold text-white mb-4">Become a Seller</h2>
@@ -259,9 +270,102 @@ function BecomeSeller({ walletAddress }) {
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Other form fields remain the same... */}
-        
-        {/* New Image Upload UI */}
+        <div>
+          <label className="block text-white mb-1">Category</label>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select a category</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-white mb-1">Product Name</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-white mb-1">Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            rows="4"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-white mb-1">Price (USD)</label>
+          <input
+            type="text"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-white mb-1">Image URLs (comma separated)</label>
+          <input
+            type="text"
+            name="imageUrls"
+            value={formData.imageUrls.join(',')}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            required
+          />
+          <p className="text-gray-400 text-sm mt-1">Enter full URLs starting with http:// or https://</p>
+        </div>
+
+        <div>
+          <label className="block text-white mb-1">Telegram Link</label>
+          <input
+            type="text"
+            name="telegramLink"
+            value={formData.telegramLink}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white mb-1">WhatsApp Link</label>
+          <input
+            type="text"
+            name="whatsappLink"
+            value={formData.whatsappLink}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className={`gaming-button w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Uploading...' : 'Submit for Verification'}
+        </button>
         <div>
           <label className="block text-white mb-1">Product Images</label>
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">

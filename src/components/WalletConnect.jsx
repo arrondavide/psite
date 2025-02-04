@@ -228,7 +228,17 @@ export default function WalletConnect({ onConnect }) {
         </div>
 
         <div className="space-y-3">
-          <SellerProducts walletAddress={address} />
+          {isMobile() ? (
+            <a
+              href={`/${address}/products`}
+              className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
+            >
+              <Package size={18} />
+              Manage Products
+            </a>
+          ) : (
+            <SellerProducts walletAddress={address} />
+          )}
           
           <button
             onClick={handleLogout}

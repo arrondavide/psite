@@ -189,6 +189,9 @@ export default function WalletConnect({ onConnect }) {
   const ConnectedWalletContent = ({ address }) => {
     const shortenedAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
     const explorerUrl = `https://etherscan.io/address/${address}`;
+    
+    // Get the base URL of your application
+    const baseUrl = window.location.origin;
 
     return (
       <div className="space-y-6">
@@ -230,7 +233,7 @@ export default function WalletConnect({ onConnect }) {
         <div className="space-y-3">
           {isMobile() ? (
             <a
-              href={`/${address}/products`}
+              href={`${baseUrl}/products?address=${address}`}
               className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
             >
               <Package size={18} />
